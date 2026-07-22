@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- OIDA for Codex — macOS launchd agent. `install.sh` substitutes __OIDA_DIR__
+     with the absolute path to this repo's `oida/` dir, writes the result to
+     ~/Library/LaunchAgents/com.oida.codex.capture.plist, and loads it with
+     `launchctl bootstrap gui/$UID`. Runs the scan hourly + at login. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.oida.codex.capture</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__OIDA_DIR__/hooks/scan.sh</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.oida/work/launchd-codex.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.oida/work/launchd-codex.log</string>
+</dict>
+</plist>

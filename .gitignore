@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local OIDA client state (never in the repo; lives in ~/.oida)
+.oida/
+*.log
+
+# OS / editor
+.DS_Store
+*.swp

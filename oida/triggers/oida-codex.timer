@@ -1,0 +1,13 @@
+# OIDA for Codex — systemd user timer (Linux). Runs oida-codex.service ~hourly
+# (and shortly after login). Enable with:
+#   systemctl --user enable --now oida-codex.timer
+[Unit]
+Description=OIDA for Codex — hourly session capture
+
+[Timer]
+OnStartupSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

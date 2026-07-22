@@ -1,0 +1,9 @@
+# OIDA for Codex — systemd user service (Linux). `install.sh` substitutes
+# __OIDA_DIR__, writes this to ~/.config/systemd/user/oida-codex.service, and
+# enables oida-codex.timer. Oneshot: runs the scan once per timer tick.
+[Unit]
+Description=OIDA for Codex — capture + push AI coding sessions (deterministic, no LLM)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash __OIDA_DIR__/hooks/scan.sh
