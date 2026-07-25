@@ -34,10 +34,11 @@ privacy model as [`oida-for-claude`](../oida-for-claude); only the transcript fo
 
 ## Redaction is best-effort — don't paste live secrets
 
-Every string is passed through a local pattern-based redactor (API keys, tokens, connection
-strings) before leaving your machine. **It is not exhaustive.** Never paste live secrets into
-prompts — use a secret manager. If a secret slips through, use **erase** (below) and tell your
-admin.
+Every string that leaves your machine — turn text, tool-call inputs, **commit subjects** and
+the **git remote URL** — is passed through a local pattern-based redactor (API keys, tokens,
+connection strings, credentialed remotes) first. **It is not exhaustive.** Never paste live
+secrets into prompts — use a secret manager. If a secret slips through, use **erase** (below)
+and tell your admin.
 
 ## Your controls
 

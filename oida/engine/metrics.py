@@ -18,6 +18,9 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from redact import redact  # noqa: E402
+
 GAP_CAP_SEC = 300  # a pause longer than 5 min counts as 5 min of active time.
 
 
@@ -49,24 +52,20 @@ def _git(repo, args, timeout=8):
         return ""
 
 
-def git_stats(repo, since_iso, until_iso, author_email=None):
-    """files/insertions/deletions/commits + commit subjects for commits in the
-    [since, until] window (optionally by a single author). Empty if not a repo."""
-    if not repo or not os.path.isdir(os.path.join(repo, ".git")):
-        return {}
-    args = ["log", f"--since={since_iso}", f"--until={until_iso}", "--numstat", "--pretty=format:%x01%H%x02%s"]
-    if author_email:
-        args.insert(1, f"--author={author_email}")
-    out = _git(repo, args)
-    if not out:
-        return {"commits": 0, "files_changed": 0, "insertions": 0, "deletions": 0, "commit_messages": []}
+def parse_git_log(out):
+    """`git log --numstat --pretty=format:%x01%H%x02%s` output -> the stats dict.
+
+    Commit subjects are author-written free text that LEAVES this machine, so
+    they go through redact() like every other outbound string: `git commit -m
+    "fix postgres://admin:s3cr3t@db.prod/main"` must not ship the secret. Pure
+    (no subprocess) so the redaction is testable."""
     commits, files, ins, dele, subjects = 0, 0, 0, 0, []
     for line in out.splitlines():
         if line.startswith("\x01"):
             commits += 1
             parts = line[1:].split("\x02", 1)
             if len(parts) == 2 and parts[1].strip():
-                subjects.append(parts[1].strip())
+                subjects.append(redact(parts[1].strip()))
             continue
         cols = line.split("\t")
         if len(cols) == 3 and cols[0].isdigit() and cols[1].isdigit():
@@ -77,13 +76,39 @@ def git_stats(repo, since_iso, until_iso, author_email=None):
             "deletions": dele, "commit_messages": subjects[:50]}
 
 
+def git_stats(repo, since_iso, until_iso, author_email=None):
+    """files/insertions/deletions/commits + redacted commit subjects for commits
+    in the [since, until] window (optionally by a single author). Empty if not a
+    repo."""
+    if not repo or not os.path.isdir(os.path.join(repo, ".git")):
+        return {}
+    args = ["log", f"--since={since_iso}", f"--until={until_iso}", "--numstat", "--pretty=format:%x01%H%x02%s"]
+    if author_email:
+        args.insert(1, f"--author={author_email}")
+    out = _git(repo, args)
+    if not out:
+        return {"commits": 0, "files_changed": 0, "insertions": 0, "deletions": 0, "commit_messages": []}
+    return parse_git_log(out)
+
+
 def _self_test():
     assert active_time([]) == {"active_sec": 0, "wall_sec": 0}
     m = active_time(["2026-07-21T10:00:00Z", "2026-07-21T10:04:00Z", "2026-07-21T11:00:00Z"])
     # gap1 = 240s (<=cap), gap2 = 3600s (capped to 300) -> 540 active; wall = 3600
     assert m == {"active_sec": 540, "wall_sec": 3600}, m
     assert git_stats("/nonexistent-repo-xyz", "2026-01-01", "2026-12-31") == {}
-    print("OK self-test: metrics (active-time cap / non-repo)")
+    # Commit subjects are redacted before they can reach the envelope.
+    log = ("\x01abc123\x02hotfix db postgres://admin:S3cr3t@db.prod:5432/main\n"
+           "3\t1\tsrc/db.py\n"
+           "\x01def456\x02chore: bump deps\n"
+           "0\t2\tlock\n")
+    stats = parse_git_log(log)
+    assert stats["commits"] == 2 and stats["files_changed"] == 2, stats
+    assert stats["insertions"] == 3 and stats["deletions"] == 3, stats
+    assert "S3cr3t" not in stats["commit_messages"][0], stats["commit_messages"]
+    assert "«redacted:connection_string»" in stats["commit_messages"][0], stats["commit_messages"]
+    assert stats["commit_messages"][1] == "chore: bump deps"
+    print("OK self-test: metrics (active-time cap / non-repo / commit-subject redaction)")
 
 
 if __name__ == "__main__":

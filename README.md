@@ -53,6 +53,11 @@ Operations:
 | status / logs | `tail ~/.oida/work/capture-codex.log` |
 | uninstall | `./install.sh --uninstall` |
 
+Config lives in `~/.oida/config.json` (`{apiUrl, deviceKey}`, mode 600). Optional
+`gitHosts: ["git.acme.dev"]` extends the hosts whose `owner/repo` may match a
+host-less allowlist entry — the default is `github.com` alone, so a same-named
+repo on another host is not captured.
+
 See [`oida/commands/`](oida/commands) for the details of each.
 
 ## Layout

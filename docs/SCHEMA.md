@@ -31,7 +31,9 @@ Every line: `{ "timestamp": <ISO>, "type": <string>, "payload": <object> }`. Fou
 id             session uuid (stable identity for update/erase)
 cwd            working dir at session start
 timestamp      session start (ISO)
-git.repository_url   git remote  -> owner/repo (session-time truth)
+git.repository_url   git remote  -> host + owner/repo (session-time truth; the
+                     remote is redacted before it enters the envelope, and the
+                     claim is refused when the cwd exists but is not that repo)
 git.branch           branch
 cli_version, originator, model_provider, base_instructions.text  (not ingested)
 ```
