@@ -3,7 +3,7 @@
 Plain-language summary for the developer installing this client. Your organization's formal
 privacy notice (the *informativa*) is the authoritative document — ask your workspace admin
 for it. This page explains what happens on **your** machine and the choices you control. Same
-privacy model as [`oida-for-claude`](../oida-for-claude); only the transcript format differs.
+privacy model as [`oida-for-claude`](../../oida-for-claude); only the transcript format differs.
 
 ## Consent: mint your own key
 
@@ -50,7 +50,7 @@ and tell your admin.
 | Erase a session's data | Per-session erase / ask your admin | Deletes that session's stored transcript + derived knowledge |
 | Stop entirely | `./install.sh --uninstall` (removes the timer) | No further scans |
 
-Old data also ages out automatically on your plan's retention window (90 / 180 / 365 days).
+Raw captured session content ages out automatically on the workspace retention window. Derived organizational learning records do **not** age out merely because the source reaches that window; an explicit session/source erasure propagates to frozen copies and derived stores while retaining only justified content-free audit markers.
 
 ## How it stays private
 
